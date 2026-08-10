@@ -13,7 +13,7 @@ export function Terminal() {
   const [history, setHistory] = useState([]);
   const [inputVal, setInputVal] = useState('');
   const [isTyping, setIsTyping] = useState(true);
-  const terminalEndRef = useRef(null);
+  const terminalBodyRef = useRef(null);
 
   // Simulated typing sequence on initial render
   useEffect(() => {
@@ -33,8 +33,11 @@ export function Terminal() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Internal terminal scroll only (doesn't scroll main window)
   useEffect(() => {
-    terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (terminalBodyRef.current) {
+      terminalBodyRef.current.scrollTop = terminalBodyRef.current.scrollHeight;
+    }
   }, [history]);
 
   const scrollToSection = (id) => {
@@ -52,7 +55,7 @@ export function Terminal() {
     }, 150);
   };
 
-  const handleCommand = (commandStr, shouldScroll = true) => {
+  const handleCommand = (commandStr, shouldScroll = false) => {
     const cleanCmd = commandStr.trim().toLowerCase();
     if (!cleanCmd) return;
 
@@ -61,13 +64,13 @@ export function Terminal() {
     switch (cleanCmd) {
       case 'whoami':
       case 'about':
-        newHistory.push({ type: 'output', text: `👤 ${personal.name} - ${personal.role}. Navegando a sección Sobre Mí...` });
+        newHistory.push({ type: 'output', text: `👤 ${personal.name} - ${personal.role}.` });
         if (shouldScroll) scrollToSection('about');
         break;
 
       case 'skills':
       case 'stack':
-        newHistory.push({ type: 'output', text: '⚡ Frontend: React, JS, Tailwind | Backend: Python, Node, APIs REST | ERP: Odoo | DB: PostgreSQL. Navegando a Stack...' });
+        newHistory.push({ type: 'output', text: '⚡ Frontend: React, JS, Tailwind | Backend: Python, Node, APIs REST | ERP: Odoo | DB: PostgreSQL.' });
         if (shouldScroll) scrollToSection('stack');
         break;
 
@@ -81,12 +84,12 @@ export function Terminal() {
         break;
 
       case 'projects':
-        newHistory.push({ type: 'output', text: '📦 Proyectos destacados: Control de Obra Odoo ERP, SaaS Dashboard, Server Monitor. Navegando a Proyectos...' });
+        newHistory.push({ type: 'output', text: '📦 Proyectos destacados: Control de Obra Odoo ERP, SaaS Dashboard, Server Monitor.' });
         if (shouldScroll) scrollToSection('projects');
         break;
 
       case 'contact':
-        newHistory.push({ type: 'output', text: `📧 Email: ${personal.email} | LinkedIn: ${personal.linkedin}. Navegando a Contacto...` });
+        newHistory.push({ type: 'output', text: `📧 Email: ${personal.email} | LinkedIn: ${personal.linkedin}.` });
         if (shouldScroll) scrollToSection('contact');
         break;
 
@@ -115,7 +118,7 @@ export function Terminal() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleCommand(inputVal);
+    handleCommand(inputVal, false);
   };
 
   const resetTerminal = () => {
@@ -165,8 +168,11 @@ export function Terminal() {
         </div>
       </div>
 
-      {/* Terminal Content Body */}
-      <div className="p-4 sm:p-5 text-xs sm:text-sm h-64 sm:h-72 overflow-y-auto space-y-3 leading-relaxed text-slate-200">
+      {/* Terminal Content Body - Internal scroll only */}
+      <div
+        ref={terminalBodyRef}
+        className="p-4 sm:p-5 text-xs sm:text-sm h-64 sm:h-72 overflow-y-auto space-y-3 leading-relaxed text-slate-200"
+      >
         <div className="text-slate-500 text-xs mb-2">
           // Consola interactiva del sistema. Haz clic en los comandos para navegar a cada sección.
         </div>
@@ -209,8 +215,6 @@ export function Terminal() {
             </button>
           </form>
         )}
-
-        <div ref={terminalEndRef} />
       </div>
 
       {/* Quick Command Navigation Presets */}
